@@ -1,1 +1,10 @@
 # (paste the YAML above exactly)
+# .github/workflows/build-and-push-ghcr.yml
+# In the 'Build and push' step:
+with:
+  context: .
+  push: true
+  pull: true        # pull fresh base image
+  no-cache: true    # disable cache for this run
+  tags: ${{ steps.meta.outputs.tags }}
+  labels: ${{ steps.meta.outputs.labels }}
