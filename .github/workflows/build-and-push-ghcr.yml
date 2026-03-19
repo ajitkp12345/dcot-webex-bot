@@ -79,7 +79,7 @@ jobs:
         with:
           context: .
           push: true
-          pull: true         # (keep for this run to pull a fresh base image)
-          no-cache: true     # (keep for this run to avoid stale layers; remove later)
+          pull: true          # pull fresh base image (avoid stale base)
+          no-cache: true      # disable layer cache for this run (remove later)
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
