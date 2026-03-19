@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---- Visibility: show exactly what the runner will send to Docker ----
+      # Show exactly what the runner will send to Docker
       - name: Show files on runner (manifests + Dockerfile + .dockerignore)
         run: |
           echo "=== package.json (runner) ==="
@@ -41,18 +41,17 @@ jobs:
           echo "=== .dockerignore (runner) ==="
           sed -n '1,200p' .dockerignore || true
 
-      # ---- Guardrail: require a lockfile (npm ci needs it) ----
+      # Guardrails
       - name: Ensure lockfile exists
         run: |
           test -f package-lock.json || (echo "Missing package-lock.json – run npm install and commit the lockfile" && exit 1)
 
-      # ---- Guardrail: enforce the correct framework version ----
       - name: Validate framework version (^2.5.1)
         run: |
           grep -q '"webex-node-bot-framework": "\^2\.5\.1"' package.json \
           || (echo "package.json does not contain webex-node-bot-framework ^2.5.1"; sed -n '1,200p' package.json; exit 1)
 
-      # ---- Use a lowercase image path (GHCR/Docker requirement) ----
+      # Lowercase image name (GHCR requirement)
       - name: Compute lowercase image name
         id: prep
         shell: bash
@@ -85,8 +84,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./Dockerfile   # <-- force the exact Dockerfile
           push: true
-          pull: true          # pull a fresh base image
-          no-cache: true      # force a fresh build this run
+          pull: true           # pull fresh base image
+          no-cache: true       # force a truly fresh build for this run
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
