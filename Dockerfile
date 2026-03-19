@@ -2,19 +2,22 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy only manifests first (better Docker cache)
-COPY package*.json ./
+# Copy manifests explicitly (avoids wildcard surprises)
+COPY package.json ./
+COPY package-lock.json ./
 
-# Prefer reproducible, production-only installs; fall back to install if needed
+# DEBUG: print manifests INSIDE the image
+RUN echo "----- package.json (inside image) -----" \
+ && sed -n '1,160p' package.json \
+ && echo "----- package-lock.json head (inside image) -----" \
+ && head -n 60 package-lock.json || true
+
+# Deterministic, prod-only install; fallback if ci fails
 RUN npm ci --omit=dev || npm install --omit=dev
 
-# Now copy the rest of the source
+# Copy rest of the app
 COPY . .
 
-# (Optional hardening)
 ENV NODE_ENV=production
-# RUN addgroup -S nodegrp && adduser -S nodeusr -G nodegrp
-# USER nodeusr
-
 EXPOSE 3000
 CMD ["npm","start"]
