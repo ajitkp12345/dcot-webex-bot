@@ -26,22 +26,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show manifests on runner
+      # ---- Visibility: show exactly what the runner will send to Docker ----
+      - name: Show files on runner (manifests + Dockerfile + .dockerignore)
         run: |
-          echo "=== package.json (HEAD on runner) ==="
+          echo "=== package.json (runner) ==="
           sed -n '1,200p' package.json || true
-          echo "=== lockfile present? ==="
+          echo
+          echo "=== package-lock.json present? (runner) ==="
           test -f package-lock.json && echo "package-lock.json exists" || (echo "NO LOCKFILE" && exit 1)
+          echo
+          echo "=== Dockerfile (runner) ==="
+          sed -n '1,200p' Dockerfile || true
+          echo
+          echo "=== .dockerignore (runner) ==="
+          sed -n '1,200p' .dockerignore || true
 
+      # ---- Guardrail: require a lockfile (npm ci needs it) ----
       - name: Ensure lockfile exists
         run: |
           test -f package-lock.json || (echo "Missing package-lock.json – run npm install and commit the lockfile" && exit 1)
 
+      # ---- Guardrail: enforce the correct framework version ----
       - name: Validate framework version (^2.5.1)
         run: |
           grep -q '"webex-node-bot-framework": "\^2\.5\.1"' package.json \
           || (echo "package.json does not contain webex-node-bot-framework ^2.5.1"; sed -n '1,200p' package.json; exit 1)
 
+      # ---- Use a lowercase image path (GHCR/Docker requirement) ----
       - name: Compute lowercase image name
         id: prep
         shell: bash
